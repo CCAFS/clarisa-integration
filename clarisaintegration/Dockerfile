@@ -1,14 +1,24 @@
 
-FROM node:20.5.1
+# Base image
+FROM node:20
 
+# Create app directory
 WORKDIR /usr/src/app
 
+# A wildcard is used to ensure both package.json AND package-lock.json are copied
 COPY package*.json ./
 
-RUN npm i --production --silent
+# Install app dependencies
+RUN npm i
 
+# Bundle app source
 COPY . .
 
+# Creates a "dist" folder with the production build
+RUN npm run build
+
+# Expose the port on which the app will run
 EXPOSE 3000
 
-CMD ["node", "dist/main.js"]
+# Start the server using the production build
+CMD ["npm", "run", "start:prod"]
