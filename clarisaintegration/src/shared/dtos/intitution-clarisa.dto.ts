@@ -17,15 +17,10 @@ export class CountryOfficeDTO {
   isHeadquarter: number;
   isoAlpha2: string;
   name: string;
+  loc_element_id!: number;
 }
 
 export class InstitutionType {
   code: number;
   name: string;
-}
-
-export class MapInstitutionClarisaDto extends PartialType(
-  InstitutionClarisaDto,
-) {
-  loc_element_id!: number;
 }

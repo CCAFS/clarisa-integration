@@ -5,12 +5,8 @@ import { HttpService } from '@nestjs/axios';
 import { Clarisa } from './clarisa.connection';
 import { env } from 'process';
 import { InstitutionsMapper } from '../../shared/mappers/institutions.mapper';
-import {
-  InstitutionClarisaDto,
-  MapInstitutionClarisaDto,
-} from '../../shared/dtos/intitution-clarisa.dto';
+import { InstitutionClarisaDto } from '../../shared/dtos/intitution-clarisa.dto';
 import { InstitutionsLocations } from './entities/institutions-locations.entity';
-import { institutionsLocationMapper } from '../../shared/mappers/institutions-location.mapper';
 import { LocElement } from './entities/loc-elements.entity';
 
 @Injectable()
@@ -157,40 +153,44 @@ export class ClarisaService {
       .findAll(whereConfig);
 
     // map the data from Clarisa to the entity and set the loc_element_id to the id of the loc element from the database
-    const newMapDataArray: MapInstitutionClarisaDto[] = resCInstitutions.map(
-      (el) => {
-        const newData: MapInstitutionClarisaDto = {
-          ...el,
-          loc_element_id: null,
-        };
-        newData.loc_element_id = res_locInsti.find(
-          (obj) => obj?.iso_alpha_2 === newData.countryOfficeDTO?.[0].isoAlpha2,
+    const newDataToSave: Partial<InstitutionsLocations>[] = [];
+    for (const el of resCInstitutions) {
+      for (const c of el.countryOfficeDTO) {
+        // set the loc_element_id to the id of the loc element from the database
+        c.loc_element_id = res_locInsti.find(
+          (obj) => obj.iso_alpha_2 === c.isoAlpha2,
         )?.id;
-        return newData;
-      },
-    );
+        // if the loc_element_id is null, add the data to the newDataToSave array
+        newDataToSave.push({
+          city: null,
+          institution_id: el.code,
+          is_headquater: c.isHeadquarter,
+          loc_element_id: c.loc_element_id,
+        });
+      }
+    }
 
     // filter the data to add
-    let toAdd = newMapDataArray
+    let toAdd = newDataToSave
       .filter(
         (obj1) =>
           !res_insti.some(
             (obj2) =>
               obj1.loc_element_id === obj2.loc_element_id &&
-              obj1.code === obj2.institution_id,
+              obj1.institution_id === obj2.institution_id,
           ),
       )
       .map((el) =>
-        this.dataSource.create(entityClass, institutionsLocationMapper(el)),
+        this.dataSource.create(entityClass, el),
       ) as InstitutionsLocations[];
 
     // filter the data to remove
     let toRemove = res_insti.filter(
       (obj2) =>
-        !newMapDataArray.some(
+        !newDataToSave.some(
           (obj1) =>
             obj1.loc_element_id === obj2.loc_element_id &&
-            obj1.code === obj2.institution_id,
+            obj1.institution_id === obj2.institution_id,
         ),
     );
     const mss = this.ClarisaMessage(entityClass);
