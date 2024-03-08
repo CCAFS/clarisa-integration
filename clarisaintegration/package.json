@@ -22,11 +22,17 @@
     "docker:run": "docker run -dti --name clarisaintegrationapp -p 3000:3000 clarisaintegration"
   },
   "dependencies": {
+    "@mikro-orm/core": "^6.1.7",
+    "@mikro-orm/mysql": "^6.1.7",
+    "@mikro-orm/nestjs": "^5.2.3",
+    "@nestjs/axios": "^3.0.2",
     "@nestjs/common": "^10.0.0",
     "@nestjs/core": "^10.0.0",
     "@nestjs/platform-express": "^10.0.0",
+    "@nestjs/schedule": "^4.0.1",
     "@nestjs/swagger": "^7.3.0",
-    "reflect-metadata": "^0.1.13",
+    "dotenv": "^16.4.5",
+    "reflect-metadata": "^0.1.14",
     "rxjs": "^7.8.1"
   },
   "devDependencies": {
