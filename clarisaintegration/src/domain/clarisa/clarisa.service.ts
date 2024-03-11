@@ -8,6 +8,7 @@ import { InstitutionsMapper } from '../../shared/mappers/institutions.mapper';
 import { InstitutionClarisaDto } from '../../shared/dtos/intitution-clarisa.dto';
 import { InstitutionsLocations } from './entities/institutions-locations.entity';
 import { LocElement } from './entities/loc-elements.entity';
+import { ClrisaMessageDto } from '../../shared/dtos/clrisa-message.dto';
 
 @Injectable()
 export class ClarisaService {
@@ -32,12 +33,15 @@ export class ClarisaService {
    * @description This method returns a message object with the following properties: OK, ERROR, START, FINALLY
    * @example ClarisaMessage(Institution) returns { OK: 'The data of Institution was saved correctly', ERROR: 'Error saving data of Institution', START: 'Start saving data of Institution', FINALLY: 'End saving data of Institution' }
    */
-  private ClarisaMessage<C>(entityClass: new () => C) {
+  private ClarisaMessage<C>(entityClass: new () => C): ClrisaMessageDto {
     return {
       OK: `The data of ${entityClass.name} was saved correctly`,
       ERROR: `Error saving data of ${entityClass.name}`,
       START: `Start saving data of ${entityClass.name}`,
       FINALLY: `End saving data of ${entityClass.name}`,
+      NO_DATA_CREATE: `No data to create in ${entityClass.name}`,
+      DATA_PENDING_UPDATE: (count) =>
+        `${count} elements pending to update in ${entityClass.name}`,
     };
   }
 
@@ -49,42 +53,70 @@ export class ClarisaService {
    * @returns
    * @description This method clones data from Clarisa to the database using the Clarisa API
    */
-  private async cloneData<C>(
-    path: string,
-    entityClass: new () => C,
-    mapper: (data: any, refData: C) => C,
-  ) {
+  private async clon_institutions<C>(path: string, entityClass: new () => C) {
     const mss = this.ClarisaMessage(entityClass);
-    this._logger.log(mss.START);
-    this.clarisa.get(path).then((res) => {
+    await this.clarisa.get(path).then(async (res: InstitutionClarisaDto[]) => {
       const saveData: C[] = [];
       // this loop is used to map the data from Clarisa to the entity
-      for (const el of res as InstitutionClarisaDto[]) {
+      const inserInstitutions: Institution[] = await this.dataSource
+        .getRepository(Institution)
+        .findAll({
+          where: { id: { $in: res.map((el) => el.code) } },
+        });
+      // then is used to filter the data to add
+      // ir return only the data that does not exist in the database
+      const insertOnly = res.filter(
+        (i) => !inserInstitutions.some((aii) => aii.id == i.code),
+      );
+      // if there is no data to add, log a message
+      const updateOnly = res.filter((i) =>
+        inserInstitutions.some((aii) => aii.id == i.code),
+      );
+      if (updateOnly.length)
+        this._logger.log(mss.DATA_PENDING_UPDATE(updateOnly.length));
+      if (!insertOnly.length) {
+        // then is used to filter the data to update
+        this._logger.log(mss.NO_DATA_CREATE);
+        return 0;
+      }
+      for (const el of insertOnly) {
         // getReference is used to get the reference of the entity
         // the reference is used to avoid creating a new entity if it already exists
         // if the entity does not exist, a new entity is created
-        let refData = this.dataSource.getReference(entityClass, el.code) as C;
-        // the mapper function is used to map the data from Clarisa to the entity
-        refData = mapper(el, refData);
+        let saveDataObj = this.dataSource.create(
+          entityClass,
+          InstitutionsMapper(el),
+        ) as C;
         // the entity is added to the array of entities to be saved
-        saveData.push(refData);
+        saveData.push(saveDataObj);
       }
-
-      this.dataSource
-        // persistAndFlush is used to save the data to the database
-        // it returns a promise that resolves to void
-        .persistAndFlush(saveData)
-        .then(() => {
-          this._logger.log(mss.OK);
-        })
-        .catch((err) => {
-          this._logger.error(mss.ERROR);
-          this._logger.error(err);
-        })
-        .finally(() => {
-          this._logger.log(mss.FINALLY);
-        });
+      this.saveDataFunction(saveData, mss);
     });
+  }
+
+  /**
+   *
+   * @param entityClass a class that represents the entity
+   * @param saveData an array of entities to be saved
+   * @returns
+   * @description This method saves the data to the database
+   */
+  async saveDataFunction<C>(saveData: C[], mss: ClrisaMessageDto) {
+    this._logger.log(mss.START);
+    await this.dataSource
+      // persistAndFlush is used to save the data to the database
+      // it returns a promise that resolves to void
+      .persistAndFlush(saveData)
+      .then(() => {
+        this._logger.log(mss.OK);
+      })
+      .catch((err) => {
+        this._logger.error(mss.ERROR);
+        this._logger.error(err);
+      })
+      .finally(() => {
+        this._logger.log(mss.FINALLY);
+      });
   }
 
   /**
@@ -114,18 +146,17 @@ export class ClarisaService {
    *
    * @param entityClass a class that represents the entity
    * @param lastUpdatedTime a number that represents the last updated time
-   * @param updateAll a boolean that represents whether to update all the data
    * @returns
    * @description This method matches the institution location from Clarisa to the database
    */
-  async matchInstitutionLocation(
+  async clon_institutionLocations(
     entityClass: new () => InstitutionsLocations,
     lastUpdatedTime?: number,
-    updateAll: boolean = false,
   ) {
+    const mss = this.ClarisaMessage(entityClass);
     // get is used to get the data from the Clarisa API
     const resCInstitutions: InstitutionClarisaDto[] = await this.clarisa.get(
-      `institutions?show=all${lastUpdatedTime && !updateAll ? `&from=${lastUpdatedTime}` : ''}`,
+      `institutions?show=all${lastUpdatedTime ? `&from=${lastUpdatedTime}` : ''}`,
     );
 
     // findall loc elements from the database
@@ -141,16 +172,14 @@ export class ClarisaService {
       never
     > = {};
 
-    // if updateAll is true, set the institution_ids to the code of the institutions from Clarisa
-    if (updateAll) {
-      const institution_ids = resCInstitutions.map((el) => el.code);
-      whereConfig.where = { institution_id: { $in: institution_ids } };
-    }
-
     // findall institutions locations from the database
     const res_insti = await this.dataSource
       .getRepository(InstitutionsLocations)
-      .findAll(whereConfig);
+      .findAll({
+        where: {
+          institution_id: { $in: resCInstitutions.map((el) => el.code) },
+        },
+      });
 
     // map the data from Clarisa to the entity and set the loc_element_id to the id of the loc element from the database
     const newDataToSave: Partial<InstitutionsLocations>[] = [];
@@ -193,19 +222,21 @@ export class ClarisaService {
             obj1.institution_id === obj2.institution_id,
         ),
     );
-    const mss = this.ClarisaMessage(entityClass);
-    this.dataSource
-      .persistAndFlush(toAdd)
-      .then(() => {
-        this._logger.log(mss.OK);
-      })
-      .catch((err) => {
-        this._logger.error(mss.ERROR);
-        this._logger.error(err);
-      })
-      .finally(() => {
-        this._logger.log(mss.FINALLY);
-      });
+    const updateOnly = newDataToSave.filter((i) =>
+      res_insti.some(
+        (aii) =>
+          aii.institution_id == i.institution_id &&
+          aii.loc_element_id == i.loc_element_id,
+      ),
+    );
+    if (updateOnly.length)
+      this._logger.log(mss.DATA_PENDING_UPDATE(updateOnly.length));
+    if (!toAdd.length) {
+      // then is used to filter the data to update
+      this._logger.log(mss.NO_DATA_CREATE);
+      return 0;
+    }
+    this.saveDataFunction(toAdd, mss);
   }
 
   /**
@@ -219,11 +250,10 @@ export class ClarisaService {
 
     const lastInst = await this.findLastUpdatedInstitution();
     const lastUpdated = lastInst?.updated_at?.getTime();
-    this.cloneData(
+    await this.clon_institutions(
       `institutions?show=all${lastUpdated ? `&from=${lastUpdated}` : ''}`,
       Institution,
-      InstitutionsMapper,
     );
-    this.matchInstitutionLocation(InstitutionsLocations, lastUpdated);
+    await this.clon_institutionLocations(InstitutionsLocations, lastUpdated);
   }
 }
