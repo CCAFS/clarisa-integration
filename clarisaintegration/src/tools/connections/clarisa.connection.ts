@@ -2,6 +2,7 @@ import { HttpService } from '@nestjs/axios';
 import { firstValueFrom, map } from 'rxjs';
 import { env } from 'process';
 import { BadRequestException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 
 /**
  * This class is a connection to the Clarisa API
@@ -15,8 +16,8 @@ export class Clarisa {
   private http: HttpService;
 
   // This method clones data from Clarisa to the database using the Clarisa API
-  constructor(http: HttpService, config: ClarisaOptions) {
-    this.clarisaHost = env.CLARISA_HOST + 'api/';
+  constructor(host: string, http: HttpService, config: ClarisaOptions) {
+    this.clarisaHost = host + 'api/';
     this.auth = {
       auth: {
         password: config.password,

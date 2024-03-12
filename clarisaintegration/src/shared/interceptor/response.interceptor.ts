@@ -2,6 +2,7 @@ import {
   CallHandler,
   ExecutionContext,
   HttpStatus,
+  Injectable,
   InternalServerErrorException,
   Logger,
   NestInterceptor,
@@ -10,9 +11,11 @@ import { Request, Response } from 'express';
 import { Observable, map } from 'rxjs';
 import { ServerResponseDto } from '../dtos/server-response.dto';
 import { ServiceResponseDto } from '../dtos/service-response.dto';
-import { env } from 'process';
+import { ConfigService } from '@nestjs/config';
 
+@Injectable()
 export class ResponseInterceptor implements NestInterceptor {
+  constructor(private readonly configService: ConfigService) {}
   private readonly _logger: Logger = new Logger('System');
   intercept(
     context: ExecutionContext,
@@ -68,8 +71,8 @@ export class ResponseInterceptor implements NestInterceptor {
       this._logger.error(message);
       this._logger.error(error);
     } else if (
-      !parseInt(env.IS_PRODUCTION) &&
-      parseInt(env.SEE_ALL_LOGS) &&
+      !parseInt(this.configService.get<string>('IS_PRODUCTION')) &&
+      parseInt(this.configService.get<string>('SEE_ALL_LOGS')) &&
       status >= HttpStatus.OK &&
       status < HttpStatus.AMBIGUOUS
     ) {
