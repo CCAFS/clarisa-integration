@@ -3,7 +3,7 @@ version: '1.0'
 services:
     dev:
         container_name: clasrisaintegration_api_dev
-        image: clasrisaintegration_api_dev-api-dev:1.0.0
+        image: clasrisaintegration-api-dev:1.0.0
         build:
             context: .
             target: development
