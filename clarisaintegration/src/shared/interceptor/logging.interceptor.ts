@@ -9,9 +9,11 @@ import { Observable } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { Request } from 'express';
 import { env } from 'process';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class LoggingInterceptor implements NestInterceptor {
+  constructor(private readonly configService: ConfigService) {}
   private readonly _logger: Logger = new Logger('System');
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     const ctx = context.switchToHttp();
@@ -23,7 +25,7 @@ export class LoggingInterceptor implements NestInterceptor {
       .pipe(
         finalize(
           () =>
-            parseInt(env.SEE_ALL_LOGS) &&
+            parseInt(this.configService.get<string>('SEE_ALL_LOGS')) &&
             this._logger.log(`[${request.method}]: ${request.url} - By ${ip}`),
         ),
       );

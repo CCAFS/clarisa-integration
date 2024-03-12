@@ -9,6 +9,7 @@ import { InstitutionClarisaDto } from '../../shared/dtos/intitution-clarisa.dto'
 import { InstitutionsLocations } from './entities/institutions-locations.entity';
 import { LocElement } from './entities/loc-elements.entity';
 import { ClrisaMessageDto } from '../../shared/dtos/clrisa-message.dto';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class ClarisaService {
@@ -18,12 +19,17 @@ export class ClarisaService {
   constructor(
     private readonly dataSource: EntityManager,
     private readonly _http: HttpService,
+    private readonly configService: ConfigService,
   ) {
     // the Clarisa class is used to connect to the Clarisa API
-    this.clarisa = new Clarisa(this._http, {
-      password: env.CLARISA_PASSWORD,
-      username: env.CLARISA_USERNAME,
-    });
+    this.clarisa = new Clarisa(
+      configService.get<string>('CLARISA_HOST'),
+      this._http,
+      {
+        password: configService.get<string>('CLARISA_PASSWORD'),
+        username: configService.get<string>('CLARISA_USERNAME'),
+      },
+    );
   }
 
   /**
@@ -103,7 +109,7 @@ export class ClarisaService {
           // if the entity does not exist, a new entity is created
           let saveDataObj = this.dataSource.create(
             Institution,
-            InstitutionsMapper(el),
+            InstitutionsMapper(this.configService, el),
           ) as Institution;
           // the entity is added to the array of entities to be saved
           saveData.push(saveDataObj);
