@@ -19,7 +19,7 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "docker:build": "docker build -t clarisaintegration .",
-    "docker:run": "docker run -dti --name clarisaintegrationapp -p 3000:3000 clarisaintegration"
+    "docker:run": "docker run --env-file ./.env -dti --name clarisaintegrationapp -p 3000:3000 clarisaintegration"
   },
   "dependencies": {
     "@mikro-orm/core": "^6.1.7",
