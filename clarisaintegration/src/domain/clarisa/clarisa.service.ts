@@ -57,6 +57,8 @@ export class ClarisaService {
       NO_DATA_CREATE: `No data to create in ${entityClass.name}`,
       DATA_PENDING_UPDATE: (count) =>
         `${count} elements pending to update in ${entityClass.name}`,
+      DATA_CREATED: (count) =>
+        `${count} elements created in ${entityClass.name}`,
     };
   }
 
@@ -106,7 +108,7 @@ export class ClarisaService {
           // the entity is added to the array of entities to be saved
           saveData.push(saveDataObj);
         }
-        this.saveDataFunction(saveData, mss);
+        await this.saveDataFunction(saveData, mss);
       },
     );
   }
@@ -120,6 +122,7 @@ export class ClarisaService {
    */
   private async saveDataFunction<C>(saveData: C[], mss: ClrisaMessageDto) {
     this._logger.log(mss.START);
+    this._logger.log(mss.DATA_CREATED(saveData.length));
     await this.dataSource
       // persistAndFlush is used to save the data to the database
       // it returns a promise that resolves to void
@@ -255,6 +258,6 @@ export class ClarisaService {
       this._logger.log(mss.NO_DATA_CREATE);
       return 0;
     }
-    this.saveDataFunction(toAdd, mss);
+    await this.saveDataFunction(toAdd, mss);
   }
 }

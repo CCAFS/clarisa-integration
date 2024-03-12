@@ -16,5 +16,6 @@ export const InstitutionsMapper = (
     created_by: parseInt(`${env.USER_AICCRA}`),
     updated_at: new Date(),
     updated_by: parseInt(`${env.USER_AICCRA}`),
+    is_active: true,
   };
 };
