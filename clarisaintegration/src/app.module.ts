@@ -1,18 +1,20 @@
+import { join } from 'path';
+
 import { Module } from '@nestjs/common';
+import { MikroOrmModule } from '@mikro-orm/nestjs';
+import { APP_FILTER, APP_INTERCEPTOR, RouterModule } from '@nestjs/core';
+import { ScheduleModule } from '@nestjs/schedule';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { MySqlDriver } from '@mikro-orm/mysql';
+
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { ClarisaModule } from './domain/clarisa/clarisa.module';
-import { APP_FILTER, APP_INTERCEPTOR, RouterModule } from '@nestjs/core';
 import { mainRoutes } from './routes/main.routes';
 import { CronJobModule } from './tools/cron-job/cron-job.module';
-import { ScheduleModule } from '@nestjs/schedule';
 import { ResponseInterceptor } from './shared/interceptor/response.interceptor';
 import { LoggingInterceptor } from './shared/interceptor/logging.interceptor';
 import { GlobalExceptions } from './shared/error-management/global.exception';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { MySqlDriver } from '@mikro-orm/mysql';
-import { join } from 'path';
 
 @Module({
   imports: [

@@ -1,8 +1,9 @@
 import 'dotenv/config';
-import { MikroOrmModuleSyncOptions } from '@mikro-orm/nestjs';
-import { MySqlDriver } from '@mikro-orm/mysql';
 import { env } from 'process';
 import { join } from 'path';
+
+import { MikroOrmModuleSyncOptions } from '@mikro-orm/nestjs';
+import { MySqlDriver } from '@mikro-orm/mysql';
 export const ormConfig: MikroOrmModuleSyncOptions = {
   entities: [join(__dirname, '..', '..', 'domain/**/*.entity{.ts,.js}')],
   entitiesTs: [join(__dirname, '..', '..', 'domain/**/*.entity{.ts,.js}')],

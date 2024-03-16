@@ -21,14 +21,14 @@ RUN npm run build
 EXPOSE 3000
 
 # Start the server using the production build
-#CMD ["npm", "run", "start:prod"]
+CMD ["npm", "run", "start:prod"]
 
 #################### PRODUCTION STAGE ####################
 # Base image
-FROM node:20-alpine as production
+FROM --platform=linux/amd64  node:20-alpine as production
 
-ARG NODE_ENV=production
-ENV NODE_ENV=${NODE_ENV}
+#ARG NODE_ENV=production
+#ENV NODE_ENV=${NODE_ENV}
 
 # Create app directory
 WORKDIR /usr/src/app
@@ -37,7 +37,7 @@ WORKDIR /usr/src/app
 COPY package*.json ./
 
 # Install app dependencies
-RUN npm ci
+RUN npm i
 
 # Bundle app source
 COPY . .
@@ -46,7 +46,7 @@ COPY . .
 RUN npm run build
 
 # Expose the port on which the app will run
-EXPOSE 3000
+EXPOSE 3001
 
 # Start the server using the production build
 CMD ["npm", "run", "start:prod"]

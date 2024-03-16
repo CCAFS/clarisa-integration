@@ -1,7 +1,9 @@
 import { env } from 'process';
+
+import { ConfigService } from '@nestjs/config';
+
 import { Institution } from '../../domain/clarisa/entities/institutions.entity';
 import { InstitutionClarisaDto } from '../dtos/intitution-clarisa.dto';
-import { ConfigService } from '@nestjs/config';
 
 export const InstitutionsMapper = (
   configService: ConfigService,

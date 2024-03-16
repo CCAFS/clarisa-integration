@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { ClarisaService } from '../../domain/clarisa/clarisa.service';
 import { Cron, CronExpression } from '@nestjs/schedule';
+
+import { ClarisaService } from '../../domain/clarisa/clarisa.service';
 
 @Injectable()
 export class ClarisaCron {

@@ -1,6 +1,7 @@
+import { env } from 'process';
+
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom, map } from 'rxjs';
-import { env } from 'process';
 import { BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 

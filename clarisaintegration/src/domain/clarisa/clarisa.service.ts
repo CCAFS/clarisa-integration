@@ -1,15 +1,18 @@
+import { env } from 'process';
+
 import { Injectable, Logger } from '@nestjs/common';
 import { EntityManager, FindAllOptions } from '@mikro-orm/mysql';
-import { Institution } from './entities/institutions.entity';
 import { HttpService } from '@nestjs/axios';
+import { ConfigService } from '@nestjs/config';
+
 import { Clarisa } from '../../tools/connections/clarisa.connection';
-import { env } from 'process';
 import { InstitutionsMapper } from '../../shared/mappers/institutions.mapper';
 import { InstitutionClarisaDto } from '../../shared/dtos/intitution-clarisa.dto';
+import { ClrisaMessageDto } from '../../shared/dtos/clrisa-message.dto';
+
+import { Institution } from './entities/institutions.entity';
 import { InstitutionsLocations } from './entities/institutions-locations.entity';
 import { LocElement } from './entities/loc-elements.entity';
-import { ClrisaMessageDto } from '../../shared/dtos/clrisa-message.dto';
-import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class ClarisaService {
@@ -107,7 +110,7 @@ export class ClarisaService {
           // getReference is used to get the reference of the entity
           // the reference is used to avoid creating a new entity if it already exists
           // if the entity does not exist, a new entity is created
-          let saveDataObj = this.dataSource.create(
+          const saveDataObj = this.dataSource.create(
             Institution,
             InstitutionsMapper(this.configService, el),
           ) as Institution;
@@ -228,7 +231,7 @@ export class ClarisaService {
     }
 
     // filter the data to add
-    let toAdd = newDataToSave
+    const toAdd = newDataToSave
       .filter(
         (obj1) =>
           !res_insti.some(
@@ -242,7 +245,7 @@ export class ClarisaService {
       ) as InstitutionsLocations[];
 
     // filter the data to remove
-    let toRemove = res_insti.filter(
+    const toRemove = res_insti.filter(
       (obj2) =>
         !newDataToSave.some(
           (obj1) =>

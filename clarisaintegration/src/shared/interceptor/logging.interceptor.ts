@@ -1,3 +1,5 @@
+import { env } from 'process';
+
 import {
   Injectable,
   NestInterceptor,
@@ -8,7 +10,6 @@ import {
 import { Observable } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { Request } from 'express';
-import { env } from 'process';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()

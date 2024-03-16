@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
+
 import { ClarisaModule } from '../../domain/clarisa/clarisa.module';
+
 import { ClarisaCron } from './clarisa.cron';
 
 @Module({

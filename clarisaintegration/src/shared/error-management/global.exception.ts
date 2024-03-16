@@ -6,6 +6,7 @@ import {
   InternalServerErrorException,
   Logger,
 } from '@nestjs/common';
+
 import { ServerResponseDto } from '../dtos/server-response.dto';
 
 @Catch()

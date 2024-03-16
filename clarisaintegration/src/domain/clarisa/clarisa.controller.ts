@@ -1,7 +1,9 @@
 import { Controller, Get, HttpStatus } from '@nestjs/common';
-import { ClarisaService } from './clarisa.service';
-import { ResponseUtils } from '../../shared/utils/response.utils';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+
+import { ResponseUtils } from '../../shared/utils/response.utils';
+
+import { ClarisaService } from './clarisa.service';
 
 @Controller()
 export class ClarisaController {
