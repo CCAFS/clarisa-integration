@@ -1,33 +1,60 @@
 pipeline {
-  agent any
-    
-  tools {nodejs "node"}
-    
-  stages {
-        
-    stage('Cloning Git') {
-      steps {
-        git 'https://github.com/CCAFS/clarisa-integration'
-      }
-    }
-        
-    stage('Install dependencies') {
-      steps {
-        sh 'npm install'
-      }
-    }
-     
-    stage('Test') {
-      steps {
-         sh 'npm test'
-      }
-    } 
+    agent any
 
-      stage('Coverage') {
-      steps {
-         sh 'npm run lint'
-      }
-    } 
+    tools {
+        nodejs "Node 21"
+    }
 
-  }
+    stages {
+        stage('Cloning Git') {
+            steps {
+                git branch: 'set-up-project', url: 'https://github.com/CCAFS/clarisa-integration'
+            }
+        }
+
+        stage('Install dependencies') {
+            steps {
+                dir('clarisaintegration') {
+                    sh 'npm install'
+                }
+            }
+        }
+
+        stage('Test') {
+            steps {
+                dir('clarisaintegration') {
+                    sh 'npm test'
+                }
+            }
+        }
+
+        stage('linting') {
+            steps {
+                dir('clarisaintegration') {
+                    sh 'npm run lint'
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            slackSend (
+                color: '#00FF00',
+                message: "clarisaintegration build succeeded",
+                channel: "#platform-notifications",
+                tokenCredentialId: 'slack-token',
+                botUser: true
+            )
+        }
+        failure {
+            slackSend (
+                color: '#FF0000',
+                message: "clarisaintegration build failed",
+                channel: "#platform-notifications",
+                tokenCredentialId: 'slack-token',
+                botUser: true
+            )
+        }
+    }
 }
