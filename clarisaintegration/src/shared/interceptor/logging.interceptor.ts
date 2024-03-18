@@ -1,5 +1,3 @@
-import { env } from 'process';
-
 import {
   Injectable,
   NestInterceptor,
@@ -16,7 +14,7 @@ import { ConfigService } from '@nestjs/config';
 export class LoggingInterceptor implements NestInterceptor {
   constructor(private readonly configService: ConfigService) {}
   private readonly _logger: Logger = new Logger('System');
-  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+  intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
     const ctx = context.switchToHttp();
     const request: Request = ctx.getRequest<Request>();
     const ip = request.socket.remoteAddress;

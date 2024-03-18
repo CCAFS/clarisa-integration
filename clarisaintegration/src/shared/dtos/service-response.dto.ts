@@ -16,5 +16,5 @@ export class ServiceResponseDto<T> {
   message: string;
 
   @ApiProperty()
-  errors?: any;
+  errors?: unknown;
 }

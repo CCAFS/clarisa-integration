@@ -1,35 +1,34 @@
-import { Entity, PrimaryKey, Property } from '@mikro-orm/core';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
-@Entity({ tableName: 'institutions_locations' })
+@Entity('institutions_locations')
 export class InstitutionsLocations {
-  @PrimaryKey({
-    autoincrement: true,
+  @PrimaryGeneratedColumn({
     type: 'bigint',
-    fieldName: 'id',
+    name: 'id',
   })
   id: number;
 
-  @Property({
+  @Column({
     type: 'bigint',
-    fieldName: 'institution_id',
+    name: 'institution_id',
   })
   institution_id: number;
 
-  @Property({
+  @Column({
     type: 'bigint',
-    fieldName: 'loc_element_id',
+    name: 'loc_element_id',
   })
   loc_element_id: number;
 
-  @Property({
+  @Column({
     type: 'tinyint',
-    fieldName: 'is_headquater',
+    name: 'is_headquater',
   })
   is_headquater: number;
 
-  @Property({
+  @Column({
     type: 'text',
-    fieldName: 'city',
+    name: 'city',
     nullable: true,
   })
   city!: string;

@@ -3,7 +3,6 @@ import {
   ExecutionContext,
   HttpStatus,
   Injectable,
-  InternalServerErrorException,
   Logger,
   NestInterceptor,
 } from '@nestjs/common';
@@ -12,7 +11,6 @@ import { Observable, map } from 'rxjs';
 import { ConfigService } from '@nestjs/config';
 
 import { ServerResponseDto } from '../dtos/server-response.dto';
-import { ServiceResponseDto } from '../dtos/service-response.dto';
 
 @Injectable()
 export class ResponseInterceptor implements NestInterceptor {
@@ -28,7 +26,7 @@ export class ResponseInterceptor implements NestInterceptor {
     const ip = request.socket.remoteAddress;
 
     return next.handle().pipe(
-      map((res: any) => {
+      map((res: { [key: string]: string }) => {
         let modifiedData: ServerResponseDto<unknown> = {
           data: [],
           status: HttpStatus.OK,
@@ -61,7 +59,11 @@ export class ResponseInterceptor implements NestInterceptor {
     );
   }
 
-  private logBasedOnStatus(status: HttpStatus, message: string, error?: any) {
+  private logBasedOnStatus(
+    status: HttpStatus,
+    message: string,
+    error?: unknown,
+  ): void {
     if (
       status >= HttpStatus.AMBIGUOUS &&
       status < HttpStatus.INTERNAL_SERVER_ERROR
@@ -81,11 +83,15 @@ export class ResponseInterceptor implements NestInterceptor {
     }
   }
 
-  private isServiceResponseDto(arg: any): arg is ServiceResponseDto<unknown> {
-    return arg && arg?.status && arg?.message;
+  private isServiceResponseDto(arg: { [key: string]: unknown }): boolean {
+    return arg?.status !== undefined && arg?.message !== undefined;
   }
 
-  private isError(arg: any): arg is InternalServerErrorException {
-    return arg && arg?.name && arg?.message && arg?.stack;
+  private isError(arg: { [key: string]: unknown }): boolean {
+    return (
+      arg?.name !== undefined &&
+      arg?.message !== undefined &&
+      arg?.stack !== undefined
+    );
   }
 }

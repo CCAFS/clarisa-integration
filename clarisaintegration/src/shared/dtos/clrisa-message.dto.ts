@@ -1,4 +1,4 @@
-export class ClrisaMessageDto {
+export class ClarisaMessageDto {
   OK: string;
   ERROR: string;
   FINALLY: string;

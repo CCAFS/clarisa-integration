@@ -1,11 +1,10 @@
 import { join } from 'path';
 
 import { Module } from '@nestjs/common';
-import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { APP_FILTER, APP_INTERCEPTOR, RouterModule } from '@nestjs/core';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { MySqlDriver } from '@mikro-orm/mysql';
+import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -21,16 +20,21 @@ import { GlobalExceptions } from './shared/error-management/global.exception';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-    MikroOrmModule.forRootAsync({
+    TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
-        entities: [join(__dirname, 'domain/**/*.entity{.ts,.js}')],
-        dbName: configService.get<string>('DB_NAME'),
-        driver: MySqlDriver,
-        user: configService.get<string>('DB_USER_NAME'),
-        password: configService.get<string>('DB_USER_PASSWORD'),
+        type: 'mysql',
         host: configService.get<string>('DB_HOST'),
+        port: parseInt(configService.get<string>('DB_PORT')),
+        username: configService.get<string>('DB_USER_NAME'),
+        password: configService.get<string>('DB_USER_PASSWORD'),
+        database: configService.get<string>('DB_NAME'),
+        entities: [join(__dirname, 'domain/**/*.entity{.ts,.js}')],
+        synchronize: false,
+        migrationsRun: false,
+        bigNumberStrings: false,
+        logging: false,
       }),
     }),
     RouterModule.register(mainRoutes),

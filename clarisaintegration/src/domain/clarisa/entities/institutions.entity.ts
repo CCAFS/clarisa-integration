@@ -1,95 +1,94 @@
-import { Entity, PrimaryKey, Property } from '@mikro-orm/core';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
-@Entity({ tableName: 'institutions' })
+@Entity('institutions')
 export class Institution {
-  @PrimaryKey({
-    autoincrement: true,
+  @PrimaryGeneratedColumn({
     type: 'bigint',
-    fieldName: 'id',
+    name: 'id',
   })
   id: number;
 
-  @Property({
+  @Column({
     type: 'text',
-    fieldName: 'name',
+    name: 'name',
   })
   name: string;
 
-  @Property({
+  @Column({
     type: 'text',
-    fieldName: 'acronym',
+    name: 'acronym',
     nullable: true,
   })
   acronym!: string;
 
-  @Property({
+  @Column({
     type: 'text',
-    fieldName: 'website_link',
+    name: 'website_link',
     nullable: true,
   })
   website_link!: string;
 
-  @Property({
+  @Column({
     type: 'bigint',
-    fieldName: 'program_id',
+    name: 'program_id',
     nullable: true,
   })
   program_id!: number;
 
-  @Property({
+  @Column({
     type: 'bigint',
-    fieldName: 'institution_type_id',
+    name: 'institution_type_id',
   })
   institution_type_id: number;
 
-  @Property({
+  @Column({
     type: 'timestamp',
-    fieldName: 'added',
+    name: 'added',
   })
   added: Date;
 
-  @Property({
+  @Column({
     type: 'bigint',
-    fieldName: 'parent_id',
+    name: 'parent_id',
     nullable: true,
   })
   parent_id!: number;
 
-  @Property({
+  @Column({
     type: 'timestamp',
-    fieldName: 'created_at',
+    name: 'created_at',
   })
   created_at: Date;
 
-  @Property({
+  @Column({
     type: 'timestamp',
-    fieldName: 'updated_at',
+    name: 'updated_at',
     nullable: true,
   })
   updated_at!: Date;
 
-  @Property({
+  @Column({
     type: 'boolean',
-    fieldName: 'is_active',
+    name: 'is_active',
   })
   is_active: boolean;
 
-  @Property({
+  @Column({
     type: 'bigint',
-    fieldName: 'created_by',
+    name: 'created_by',
   })
   created_by: number;
 
-  @Property({
+  @Column({
     type: 'bigint',
-    fieldName: 'updated_by',
+    name: 'updated_by',
     nullable: true,
   })
   updated_by!: number;
 
-  @Property({
+  @Column({
     type: 'text',
-    fieldName: 'modification_justification',
+    name: 'modification_justification',
     nullable: true,
   })
   modification_justification!: string;

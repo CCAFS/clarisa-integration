@@ -1,5 +1,3 @@
-import { env } from 'process';
-
 import { ConfigService } from '@nestjs/config';
 
 import { Institution } from '../../domain/clarisa/entities/institutions.entity';
