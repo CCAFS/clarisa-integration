@@ -290,7 +290,7 @@ describe('Clarisa service', () => {
     service = module.get<ClarisaService>(ClarisaService);
   });
 
-  it('should throw an error if the result is not found', async () => {
+  it('It should resolve when you finish executing all the steps correctly.', async () => {
     jest
       .spyOn(service, 'getInstitutions')
       .mockResolvedValue(httpServiceMock as InstitutionClarisaDto[])
