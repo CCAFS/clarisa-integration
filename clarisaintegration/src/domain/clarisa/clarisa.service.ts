@@ -173,7 +173,7 @@ export class ClarisaService {
   }
 
   public async getInstitutions(
-    lastUpdatedTime,
+    lastUpdatedTime: number,
   ): Promise<InstitutionClarisaDto[]> {
     let query = 'institutions?show=all';
     if (lastUpdatedTime) {

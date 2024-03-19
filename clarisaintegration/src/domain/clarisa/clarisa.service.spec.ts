@@ -1,9 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { HttpModule, HttpService } from '@nestjs/axios';
-import { ClarisaService } from './clarisa.service';
 import { DataSource } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
-import { of } from 'rxjs';
+
+import { InstitutionClarisaDto } from '../../shared/dtos/intitution-clarisa.dto';
+
+import { ClarisaService } from './clarisa.service';
 
 describe('Clarisa service', () => {
   let service: ClarisaService;
@@ -291,8 +293,8 @@ describe('Clarisa service', () => {
   it('should throw an error if the result is not found', async () => {
     jest
       .spyOn(service, 'getInstitutions')
-      .mockResolvedValue(httpServiceMock as any)
-      .mockResolvedValue(httpServiceMock as any);
+      .mockResolvedValue(httpServiceMock as InstitutionClarisaDto[])
+      .mockResolvedValue(httpServiceMock as InstitutionClarisaDto[]);
     await expect(service.dataReplicationProcess()).toEqual(Promise.resolve({}));
   });
 });
