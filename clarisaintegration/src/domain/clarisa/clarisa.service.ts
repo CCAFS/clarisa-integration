@@ -39,13 +39,14 @@ export class ClarisaService {
    * @description This method clones the data of the institutions from Clarisa to the database
    * @example dataReplicationProcess() returns Promise<void>
    */
-  async dataReplicationProcess(): Promise<void> {
+  async dataReplicationProcess(): Promise<boolean> {
     this._logger.verbose(`Start saving data of ${ClarisaService.name}`);
 
     const lastInst = await this.findLastUpdatedInstitution();
-    const lastUpdated = lastInst?.updated_at?.getTime();
+    const lastUpdated = new Date(lastInst?.updated_at).getTime();
     await this.cloneInstitutions(lastUpdated);
     await this.cloneInstitutionLocations(lastUpdated);
+    return Promise.resolve(true);
   }
 
   /**
@@ -171,7 +172,7 @@ export class ClarisaService {
     );
   }
 
-  private async getInstitutions(
+  public async getInstitutions(
     lastUpdatedTime,
   ): Promise<InstitutionClarisaDto[]> {
     let query = 'institutions?show=all';

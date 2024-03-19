@@ -36,7 +36,7 @@ export class Clarisa {
       // This method gets data from Clarisa using the Clarisa API
       this.http.get<T[]>(this.clarisaHost + path, this.auth).pipe(
         map(({ data }) => {
-          return data;
+          return data == undefined ? [] : data;
         }),
       ),
     ).catch((err) => {
