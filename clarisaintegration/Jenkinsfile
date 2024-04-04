@@ -1,8 +1,8 @@
 pipeline {
     agent any
 
-    tools {
-        nodejs "Node 21"
+    environment {
+        ARTIFACT_ID = "ibdteam/aiccra:${env.BUILD_NUMBER}"
     }
 
     stages {
@@ -12,26 +12,40 @@ pipeline {
             }
         }
 
-        stage('Install dependencies') {
+        stage('Docker Build') {
             steps {
                 dir('clarisaintegration') {
-                    sh 'npm install'
+                    withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'prms-test-aws-creds', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+                        sh 'aws secretsmanager get-secret-value --secret-id prod/app/backend/aiccra/clarisaintegration --query SecretString --output text | jq -r \'to_entries|map("\\(.key)=\\(.value|tostring)")|.[]\' > .env'
+                    }
+                    echo "${ARTIFACT_ID}"
+                    sh "docker build -t clasrisaintegration-api-prod:${env.BUILD_NUMBER} ."
+                    sh "docker tag clasrisaintegration-api-prod:${env.BUILD_NUMBER} ${ARTIFACT_ID}"
                 }
             }
         }
 
-        stage('Test') {
+        stage('Docker Test') {
             steps {
                 dir('clarisaintegration') {
-                    sh 'npm test'
+                    sh "docker run ${ARTIFACT_ID} npm test"
                 }
             }
         }
 
-        stage('linting') {
+        stage('Docker linting') {
             steps {
                 dir('clarisaintegration') {
-                    sh 'npm run lint'
+                    sh 'docker run ${ARTIFACT_ID} npm run lint'
+                }
+            }
+        }
+
+        stage('Publish to Docker Hub') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_HUB_USERNAME', passwordVariable: 'DOCKER_HUB_PASSWORD')]) {
+                    sh "docker login -u ${DOCKER_HUB_USERNAME} -p ${DOCKER_HUB_PASSWORD}"
+                    sh "docker push ${ARTIFACT_ID}"
                 }
             }
         }
@@ -44,7 +58,35 @@ pipeline {
                 message: "clarisaintegration build succeeded",
                 channel: "#platform-notifications",
                 tokenCredentialId: 'slack-token',
-                botUser: true
+                botUser: true,
+                attachments: [
+                    [
+                        title: "Build Success Details",
+                        color: "#00FF00",
+                        fields: [
+                            [
+                                title: "Stage",
+                                value: "${env.STAGE_NAME}",
+                                short: true
+                            ],
+                            [
+                                title: "Job",
+                                value: "${env.JOB_NAME}",
+                                short: true
+                            ],
+                            [
+                                title: "Build Number",
+                                value: "${env.BUILD_NUMBER}",
+                                short: true
+                            ],
+                            [
+                                title: "Docker Image",
+                                value: "${ARTIFACT_ID}",
+                                short: true
+                            ]
+                        ]
+                    ]
+                ]
             )
         }
         failure {
@@ -53,7 +95,30 @@ pipeline {
                 message: "clarisaintegration build failed",
                 channel: "#platform-notifications",
                 tokenCredentialId: 'slack-token',
-                botUser: true
+                botUser: true,
+                attachments: [
+                    [
+                        title: "Build Failure Details",
+                        color: "#FF0000",
+                        fields: [
+                            [
+                                title: "Stage",
+                                value: "${env.STAGE_NAME}",
+                                short: true
+                            ],
+                            [
+                                title: "Job",
+                                value: "${env.JOB_NAME}",
+                                short: true
+                            ],
+                            [
+                                title: "Build Number",
+                                value: "${env.BUILD_NUMBER}",
+                                short: true
+                            ]
+                        ]
+                    ]
+                ]
             )
         }
     }
