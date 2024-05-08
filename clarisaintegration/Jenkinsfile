@@ -15,10 +15,6 @@ pipeline {
         stage('Docker Build') {
             steps {
                 dir('clarisaintegration') {
-                    withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'prms-test-aws-creds', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
-                        sh 'aws secretsmanager get-secret-value --secret-id prod/app/backend/aiccra/clarisaintegration --query SecretString --output text | jq -r \'to_entries|map("\\(.key)=\\(.value|tostring)")|.[]\' > .env'
-                    }
-                    echo "${ARTIFACT_ID}"
                     sh "docker build -t clasrisaintegration-api-prod:${env.BUILD_NUMBER} ."
                     sh "docker tag clasrisaintegration-api-prod:${env.BUILD_NUMBER} ${ARTIFACT_ID}"
                 }
@@ -36,16 +32,40 @@ pipeline {
         stage('Docker linting') {
             steps {
                 dir('clarisaintegration') {
-                    sh 'docker run ${ARTIFACT_ID} npm run lint'
+                    sh "docker run ${ARTIFACT_ID} npm run lint"
                 }
             }
         }
 
         stage('Publish to Docker Hub') {
+            when {
+                branch 'main'
+            }
             steps {
                 withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_HUB_USERNAME', passwordVariable: 'DOCKER_HUB_PASSWORD')]) {
-                    sh "docker login -u ${DOCKER_HUB_USERNAME} -p ${DOCKER_HUB_PASSWORD}"
-                    sh "docker push ${ARTIFACT_ID}"
+                    sh 'echo $DOCKER_HUB_PASSWORD | docker login -u $DOCKER_HUB_USERNAME --password-stdin'
+                    sh 'docker push ' + ARTIFACT_ID
+                }
+            }
+        }
+
+        stage('Deploy') {
+            when {
+                branch 'main'
+            }
+            steps {
+                withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'prms-test-aws-creds', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+                    sh 'aws secretsmanager get-secret-value --secret-id prod/app/backend/aiccra/clarisaintegration --query SecretString --output text | jq -r \'to_entries|map("\\(.key)=\\(.value|tostring)")|.[]\' > .env'
+                }
+                sshagent(['ec2-ssh-credentials']) {
+                    sh '''
+                    ssh -o StrictHostKeyChecking=no marlo_admin@172.30.0.229 "
+                        docker pull ${ARTIFACT_ID}
+                        docker stop clarisaintegrationapp || true
+                        docker rm clarisaintegrationapp || true
+                        docker run --env-file ./.env -dti --platform linux/amd64 --name clarisaintegrationapp -p 3000:3000 ${ARTIFACT_ID}
+                    "
+                    '''
                 }
             }
         }
@@ -92,7 +112,7 @@ pipeline {
         failure {
             slackSend (
                 color: '#FF0000',
-                message: "clarisaintegration build failed",
+                message: "clarisaintegration build failed: ${error.getMessage()}",
                 channel: "#platform-notifications",
                 tokenCredentialId: 'slack-token',
                 botUser: true,
