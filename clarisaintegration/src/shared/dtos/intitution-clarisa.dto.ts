@@ -1,5 +1,3 @@
-import { PartialType } from '@nestjs/swagger';
-
 export class InstitutionClarisaDto {
   code: number;
   name: string;

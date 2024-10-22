@@ -1,7 +1,4 @@
-import { env } from 'process';
-
 import { Injectable, Logger } from '@nestjs/common';
-import { EntityManager, FindAllOptions } from '@mikro-orm/mysql';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 
@@ -13,14 +10,15 @@ import { ClrisaMessageDto } from '../../shared/dtos/clrisa-message.dto';
 import { Institution } from './entities/institutions.entity';
 import { InstitutionsLocations } from './entities/institutions-locations.entity';
 import { LocElement } from './entities/loc-elements.entity';
+import { DataSource, In } from 'typeorm';
 
 @Injectable()
 export class ClarisaService {
-  private clarisa: Clarisa;
+  private readonly clarisa: Clarisa;
   private readonly _logger = new Logger(ClarisaService.name);
 
   constructor(
-    private readonly dataSource: EntityManager,
+    private readonly dataSource: DataSource,
     private readonly _http: HttpService,
     private readonly configService: ConfigService,
   ) {
@@ -83,12 +81,14 @@ export class ClarisaService {
     const mss = this.ClarisaMessage(Institution);
     await this.getInstitutions(lastUpdated).then(
       async (res: InstitutionClarisaDto[]) => {
-        const saveData: Institution[] = [];
+        const saveData: Partial<Institution>[] = [];
         // this loop is used to map the data from Clarisa to the entity
         const inserInstitutions: Institution[] = await this.dataSource
           .getRepository(Institution)
-          .findAll({
-            where: { id: { $in: res.map((el) => el.code) } },
+          .find({
+            where: {
+              id: In(res.map((el) => el.code)),
+            },
           });
         // then is used to filter the data to add
         // ir return only the data that does not exist in the database
@@ -110,14 +110,9 @@ export class ClarisaService {
           // getReference is used to get the reference of the entity
           // the reference is used to avoid creating a new entity if it already exists
           // if the entity does not exist, a new entity is created
-          const saveDataObj = this.dataSource.create(
-            Institution,
-            InstitutionsMapper(this.configService, el),
-          ) as Institution;
-          // the entity is added to the array of entities to be saved
-          saveData.push(saveDataObj);
+          saveData.push(InstitutionsMapper(this.configService, el));
         }
-        await this.saveDataFunction(saveData, mss);
+        await this.saveDataFunction(saveData, mss, Institution);
       },
     );
   }
@@ -129,13 +124,18 @@ export class ClarisaService {
    * @returns
    * @description This method saves the data to the database
    */
-  private async saveDataFunction<C>(saveData: C[], mss: ClrisaMessageDto) {
+  private async saveDataFunction<C>(
+    saveData: C[],
+    mss: ClrisaMessageDto,
+    entityClass: new () => C,
+  ) {
     this._logger.log(mss.START);
     this._logger.log(mss.DATA_CREATED(saveData.length));
     await this.dataSource
       // persistAndFlush is used to save the data to the database
       // it returns a promise that resolves to void
-      .persistAndFlush(saveData)
+      .getRepository(entityClass)
+      .save(saveData)
       .then(() => {
         this._logger.log(mss.OK);
       })
@@ -162,8 +162,9 @@ export class ClarisaService {
         // find is used to find the last updated institution from the database using the updated_at field
         // orderBy is used to order the results by the updated_at field in descending order
         // limit is used to limit the results to 1
-        .find({}, { orderBy: { updated_at: 'DESC' }, limit: 1 })
-        .then((res) => (res.length ? res[0] : null))
+        .findOne({
+          order: { updated_at: 'DESC' },
+        })
         .catch((err) => {
           this._logger.error(err);
           return null;
@@ -172,9 +173,10 @@ export class ClarisaService {
   }
 
   private async getInstitutions(lastUpdatedTime) {
-    return this.clarisa.get(
-      `institutions?show=all${lastUpdatedTime ? `&from=${lastUpdatedTime}` : ''}`,
-    ) as Promise<InstitutionClarisaDto[]>;
+    const baseUrl = 'institutions?show=all';
+    const fromParam = lastUpdatedTime ? `&from=${lastUpdatedTime}` : '';
+    const url = `${baseUrl}${fromParam}`;
+    return this.clarisa.get<InstitutionClarisaDto>(url);
   }
 
   /*
@@ -191,24 +193,14 @@ export class ClarisaService {
       await this.getInstitutions(lastUpdatedTime);
 
     // findall loc elements from the database
-    const res_locInsti = await this.dataSource
-      .getRepository(LocElement)
-      .findAll();
-
-    // set the whereConfig object to an empty object
-    const whereConfig: FindAllOptions<
-      InstitutionsLocations,
-      never,
-      '*',
-      never
-    > = {};
+    const res_locInsti = await this.dataSource.getRepository(LocElement).find();
 
     // findall institutions locations from the database
     const res_insti = await this.dataSource
       .getRepository(InstitutionsLocations)
-      .findAll({
+      .find({
         where: {
-          institution_id: { $in: resCInstitutions.map((el) => el.code) },
+          institution_id: In(resCInstitutions.map((el) => el.code)),
         },
       });
 
@@ -231,18 +223,14 @@ export class ClarisaService {
     }
 
     // filter the data to add
-    const toAdd = newDataToSave
-      .filter(
-        (obj1) =>
-          !res_insti.some(
-            (obj2) =>
-              obj1.loc_element_id === obj2.loc_element_id &&
-              obj1.institution_id === obj2.institution_id,
-          ),
-      )
-      .map((el) =>
-        this.dataSource.create(InstitutionsLocations, el),
-      ) as InstitutionsLocations[];
+    const toAdd = newDataToSave.filter(
+      (obj1) =>
+        !res_insti.some(
+          (obj2) =>
+            obj1.loc_element_id === obj2.loc_element_id &&
+            obj1.institution_id === obj2.institution_id,
+        ),
+    );
 
     // filter the data to remove
     const toRemove = res_insti.filter(
@@ -267,6 +255,6 @@ export class ClarisaService {
       this._logger.log(mss.NO_DATA_CREATE);
       return 0;
     }
-    await this.saveDataFunction(toAdd, mss);
+    await this.saveDataFunction(toAdd, mss, InstitutionsLocations);
   }
 }

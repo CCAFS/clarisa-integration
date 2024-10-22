@@ -1,116 +1,52 @@
-import { Entity, PrimaryKey, Property } from '@mikro-orm/core';
+import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 
-@Entity({ tableName: 'loc_elements' })
+@Entity('loc_elements')
 export class LocElement {
-  @PrimaryKey({
-    fieldName: 'id',
-    type: 'bigint',
-    autoincrement: true,
-  })
+  @PrimaryGeneratedColumn({ type: 'bigint', name: 'id' })
   id: number;
 
-  @Property({
-    type: 'text',
-    fieldName: 'name',
-    nullable: false,
-  })
+  @Column({ type: 'text', name: 'name', nullable: false })
   name: string;
 
-  @Property({
-    type: 'varchar',
-    fieldName: 'iso_alpha_2',
-    nullable: true,
-  })
+  @Column({ type: 'varchar', name: 'iso_alpha_2', nullable: true })
   iso_alpha_2: string;
 
-  @Property({
-    type: 'bigint',
-    fieldName: 'iso_numeric',
-    nullable: true,
-  })
+  @Column({ type: 'bigint', name: 'iso_numeric', nullable: true })
   iso_numeric: number;
 
-  @Property({
-    type: 'bigint',
-    fieldName: 'parent_id',
-    nullable: true,
-  })
+  @Column({ type: 'bigint', name: 'parent_id', nullable: true })
   parent_id: number;
 
-  @Property({
-    type: 'bigint',
-    fieldName: 'element_type_id',
-    nullable: true,
-  })
+  @Column({ type: 'bigint', name: 'element_type_id', nullable: true })
   element_type_id: number;
 
-  @Property({
-    type: 'bigint',
-    fieldName: 'geoposition_id',
-    nullable: true,
-  })
+  @Column({ type: 'bigint', name: 'geoposition_id', nullable: true })
   geoposition_id: number;
 
-  @Property({
-    type: 'tinyint',
-    fieldName: 'is_site_integration',
-    nullable: true,
-  })
+  @Column({ type: 'tinyint', name: 'is_site_integration', nullable: true })
   is_site_integration: number;
 
-  @Property({
-    type: 'tinyint',
-    fieldName: 'is_active',
-    nullable: false,
-  })
+  @Column({ type: 'tinyint', name: 'is_active', nullable: false })
   is_active: number;
 
-  @Property({
-    type: 'bigint',
-    fieldName: 'created_by',
-    nullable: true,
-  })
+  @Column({ type: 'bigint', name: 'created_by', nullable: true })
   created_by: number;
 
-  @Property({
-    type: 'timestamp',
-    fieldName: 'active_since',
-    nullable: false,
-  })
+  @Column({ type: 'timestamp', name: 'active_since', nullable: false })
   active_since: Date;
 
-  @Property({
-    type: 'bigint',
-    fieldName: 'modified_by',
-    nullable: true,
-  })
+  @Column({ type: 'bigint', name: 'modified_by', nullable: true })
   modified_by: number;
 
-  @Property({
-    type: 'text',
-    fieldName: 'modification_justification',
-    nullable: true,
-  })
+  @Column({ type: 'text', name: 'modification_justification', nullable: true })
   modification_justification: string;
 
-  @Property({
-    type: 'bigint',
-    fieldName: 'global_unit_id',
-    nullable: true,
-  })
+  @Column({ type: 'bigint', name: 'global_unit_id', nullable: true })
   global_unit_id: number;
 
-  @Property({
-    type: 'bigint',
-    fieldName: 'rep_ind_regions_id',
-    nullable: true,
-  })
+  @Column({ type: 'bigint', name: 'rep_ind_regions_id', nullable: true })
   rep_ind_regions_id: number;
 
-  @Property({
-    type: 'varchar',
-    fieldName: 'iso_alpha_3',
-    nullable: true,
-  })
+  @Column({ type: 'varchar', name: 'iso_alpha_3', nullable: true })
   iso_alpha_3: string;
 }
