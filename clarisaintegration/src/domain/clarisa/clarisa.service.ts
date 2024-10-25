@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
+import { DataSource, In, IsNull, Not } from 'typeorm';
 
 import { Clarisa } from '../../tools/connections/clarisa.connection';
 import { InstitutionsMapper } from '../../shared/mappers/institutions.mapper';
@@ -10,7 +11,6 @@ import { ClrisaMessageDto } from '../../shared/dtos/clrisa-message.dto';
 import { Institution } from './entities/institutions.entity';
 import { InstitutionsLocations } from './entities/institutions-locations.entity';
 import { LocElement } from './entities/loc-elements.entity';
-import { DataSource, In } from 'typeorm';
 
 @Injectable()
 export class ClarisaService {
@@ -163,6 +163,7 @@ export class ClarisaService {
         // orderBy is used to order the results by the updated_at field in descending order
         // limit is used to limit the results to 1
         .findOne({
+          where: { updated_at: Not(IsNull()) },
           order: { updated_at: 'DESC' },
         })
         .catch((err) => {

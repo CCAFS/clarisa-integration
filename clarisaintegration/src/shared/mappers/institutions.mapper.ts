@@ -13,11 +13,10 @@ export const InstitutionsMapper = (
     name: data?.name,
     acronym: data?.acronym,
     website_link: data?.websiteLink,
-    added: new Date(data?.added),
-    created_at: new Date(),
+    created_at: new Date(data?.added),
     institution_type_id: data?.institutionType?.code,
     created_by: userAiccra,
-    updated_at: new Date(),
+    updated_at: new Date(data?.added),
     updated_by: userAiccra,
     is_active: true,
   };

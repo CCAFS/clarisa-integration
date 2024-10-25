@@ -2,9 +2,9 @@ import 'dotenv/config';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'; // Import the necessary modules
 import { ConfigService } from '@nestjs/config';
+import { Logger } from '@nestjs/common';
 
 import { AppModule } from './app.module';
-import { Logger } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);

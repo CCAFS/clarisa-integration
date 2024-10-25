@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { APP_FILTER, APP_INTERCEPTOR, RouterModule } from '@nestjs/core';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -11,7 +12,6 @@ import { CronJobModule } from './tools/cron-job/cron-job.module';
 import { ResponseInterceptor } from './shared/interceptor/response.interceptor';
 import { LoggingInterceptor } from './shared/interceptor/logging.interceptor';
 import { GlobalExceptions } from './shared/error-management/global.exception';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { dataSourceOptions } from './db/config/orm.config';
 
 @Module({

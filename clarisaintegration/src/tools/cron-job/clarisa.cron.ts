@@ -8,7 +8,7 @@ export class ClarisaCron {
   constructor(private readonly clarisaService: ClarisaService) {}
 
   @Cron(CronExpression.EVERY_8_HOURS)
-  ClarisaCloning() {
+  ClarisaCloning(): void {
     this.clarisaService.bootstrap();
   }
 }

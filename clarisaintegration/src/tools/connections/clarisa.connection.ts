@@ -1,9 +1,6 @@
-import { env } from 'process';
-
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom, map } from 'rxjs';
 import { BadRequestException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 
 /**
  * This class is a connection to the Clarisa API
